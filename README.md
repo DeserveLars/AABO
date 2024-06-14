@@ -71,14 +71,16 @@ pip install -r requirements/build.txt
 pip install -v -e .
 
 #请用对应的aabo文件替代mmdetection里对应的文件：
-- `AABO/__init__.py`--->`mmdetection/mmdet/models/anchor_heads/__init__.py`
-- `AABO/anchor_generator.py`--->`mmdetection/mmdet/core/anchor/anchor_generator.py`
-- `AABO/anchor_head.py`--->`mmdetection/mmdet/models/anchor_heads/anchor_head.py`
+AABO/__init__.py--->mmdetection/mmdet/models/anchor_heads/__init__.py
+AABO/anchor_generator.py--->mmdetection/mmdet/core/anchor/anchor_generator.py
+AABO/anchor_head.py--->mmdetection/mmdet/models/anchor_heads/anchor_head.py
+
 #请将这些文件添加到相应的目录中：
-- 添加`AABO/aabo_rpn_head.py``mmdetection/mmdet/models/anchor_heads/`
-- 添加`AABO/aabo_mask_rcnn_r101_fpn_2x.py ``mmdetection/configs/`
-- 添加`AABO/aabo_htc_dcov_x101_64x4d_fpn_24e.py``mmdetection/configs/`
-#注意有两个示例配置文件：`aabo_mask_rcnn_r101_fpn_2x.py`和`aabo_htc_dcov_x101_64x4d_fpn_24e.py`。使用这两个配置文件，AABO 搜索到的优化锚点设置可以提升 Mask RCNN 和 HTC 的性能。
+添加AABO/aabo_rpn_head.py到mmdetection/mmdet/models/anchor_heads/
+添加AABO/aabo_mask_rcnn_r101_fpn_2x.py到mmdetection/configs/
+添加AABO/aabo_htc_dcov_x101_64x4d_fpn_24e.py到mmdetection/configs/
+
+#注意有两个示例配置文件：aabo_mask_rcnn_r101_fpn_2x.py和aabo_htc_dcov_x101_64x4d_fpn_24e.py。使用这两个配置文件，AABO 搜索到的优化锚点设置可以提升 Mask RCNN 和 HTC 的性能。
 如果您想在其他检测器上测试这些优化的锚点设置的性能，只需将默认锚点替换为这两个文件中记录的优化锚点即可。在论文中，对不同的高级基于锚点的检测器进行了实验，并观察到一致的性能改进。
 
 #复制对应配置文件
@@ -97,3 +99,10 @@ data_root = '/path/to/coco/'
 训练完成后，可以使用以下命令评估模型：<br>
 `python tools/test.py configs/custom/faster_rcnn_r50_fpn_1x_vg.py work_dirs/faster_rcnn_r50_fpn_1x_vg/latest.pth --eval bbox`
 # 5、实验结果
+在一些大规模方法上的结果，我们使用Faster-RCNN结合FPN作为检测器，并使用ResNet-50作为主干。结果表明，常用检测器中使用的预定义锚点并不是最佳的。将锚点配置视为超参数并使用AABO对其进行优化可以帮助确定更好的锚点设置并提高检测器的性能，而不会增加网络的复杂性。还可以发现，AABO对于VG 3000 等大规模目标检测数据集特别有用。我们推测这是因为搜索到的锚点可以更好地捕获大量类别中物体的各种尺寸和形状。结果如下：<br>
+![图片1](https://github.com/DeserveLars/AABO/assets/143677923/cf57981e-f2ec-4e0f-a961-c5ac3c632405)
+<br>使用我们的最佳锚点可以检测到更多更大和更小的物体，这表明我们的最佳锚点更加多样化并且适合特定数据集。并且，具有优化锚点配置的 Faster-RCNN给出的边界框更加紧密和清晰。如图所示：<br>
+![图片2](https://github.com/DeserveLars/AABO/assets/143677923/734b9908-4dcb-4773-b1fd-5cc3e16e89b9)
+<br>通过 AABO 搜索出最佳锚点配置后，将它们应用到其他几个主干网络和检测器上，以研究锚点设置的泛化特性。对于主干网，将 ResNet-50更改为 ResNet-101。在COCO val验证集上测试。我们可以观察到，无论是单阶段方法还是两阶段方法，最佳锚点都可以持续提高SOTA检测器的性能。结果如下：<br>
+![图片3](https://github.com/DeserveLars/AABO/assets/143677923/32f552d2-587c-492a-b862-9f85d5ba6daf)
+<br>结果表明，我们的最佳锚点可以广泛适用于不同的网络主干和 SOTA 检测算法。
